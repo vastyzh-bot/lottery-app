@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>东北大学工商管理学院元旦晚会抽奖（批量抽取）</title>
+    <style>
+        :root {
+            /* 喜庆配色 */
+            --theme-red-dark: #8e0e00;
+            --theme-red-light: #d90429;
+            --theme-gold: #ffd700;
+            --theme-gold-warm: #ffb300;
+            --text-light: #fff0f3;
+            /* 东北大学校色：蓝 (#00418A) - 现已改为使用亮色 */
+            --neuedu-blue: #00418A;
+        }
+
+        /* --- KEYFRAMES 动画定义 --- */
+
+        /* 1. 背景慢速动态移动 */
+        @keyframes dynamic-bg {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
+        }
+
+        /* 2. 标题呼吸光晕 */
+        @keyframes title-glow {
+            0% { text-shadow: 0 0 10px var(--theme-gold); }
+            50% { text-shadow: 0 0 25px var(--theme-gold), 0 0 5px rgba(255, 50, 0, 0.5); }
+            100% { text-shadow: 0 0 10px var(--theme-gold); }
+        }
+
+        /* 3. 三等奖 (3rd): 标准脉冲，500ms */
+        @keyframes pulse-gold-3rd {
+            0% { transform: scale(1.2); box-shadow: 0 0 10px var(--theme-gold); }
+            50% { transform: scale(1.4); box-shadow: 0 0 30px 10px rgba(255, 215, 0, 0.7); }
+            100% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 215, 0, 0.6); }
+        }
+
+        /* 4. 二等奖 (2nd): 更大脉冲，700ms，更亮 */
+        @keyframes pulse-gold-2nd {
+            0% { transform: scale(1.3); box-shadow: 0 0 15px var(--theme-gold); }
+            50% { 
+                transform: scale(1.7); /* 更大的放大效果 */
+                box-shadow: 0 0 60px 25px rgba(255, 215, 0, 0.9), 0 0 40px 15px rgba(255, 50, 0, 0.7); /* 强光晕 */
+            }
+            100% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 215, 0, 0.6); }
+        }
+
+        /* 5. 一等奖 (1st): 最炸裂，1000ms，爆炸性光晕 */
+        @keyframes pulse-gold-1st {
+            0% { 
+                transform: scale(1.4);
+                box-shadow: 0 0 20px var(--theme-gold);
+            }
+            50% { 
+                transform: scale(2.0); /* 爆炸性放大 */
+                box-shadow: 0 0 100px 40px rgba(255, 255, 200, 1), 0 0 50px 20px rgba(255, 50, 0, 1); /* 极致光晕 */
+            }
+            100% { 
+                transform: scale(1);
+                box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+            }
+        }
+        
+        /* 6. 主题文字/大学名称呼吸效果 */
+        @keyframes theme-pulse {
+            0% { opacity: 0.8; transform: scale(1.0); }
+            100% { opacity: 1.0; transform: scale(1.02); }
+        }
+
+        /* --- 基础样式和布局 --- */
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            /* 动态背景配置 */
+            background: radial-gradient(circle at 50% 30%, #e63946 0%, #8e0e00 70%, #2c0400 100%);
+            background-size: 200% 200%; /* 使背景大于视口，以便移动 */
+            animation: dynamic-bg 60s linear infinite alternate; /* 慢速、无限、交替运动 */
+            
+            color: var(--text-light);
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+            position: relative; 
+        }
+
+        /* 粒子画布，作为底层特效 */
+        #particleCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1; 
+            pointer-events: none; 
+        }
+
+        header {
+            margin-top: 20px;
+            text-align: center;
+            border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+            padding-bottom: 10px;
+            width: 80%;
+            z-index: 10;
+        }
+        
+        /* --- 东北大学标题样式 (颜色调整为亮色) --- */
+        #university-title {
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+            color: var(--text-light); /* 亮白色/暖金色 */
+            font-family: 'SimHei', 'Heiti SC', sans-serif; /* 粗黑体，庄重 */
+            font-weight: bold;
+            letter-spacing: 10px;
+            /* 调整为金红光晕，并使用主题呼吸动画 */
+            text-shadow: 0 0 10px var(--theme-gold), 0 0 5px var(--theme-red-light);
+            animation: theme-pulse 4s ease-in-out infinite alternate;
+        }
+
+
+        h1 {
+            font-size: 3rem;
+            margin: 0;
+            color: var(--theme-gold);
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.8), 2px 2px 5px rgba(0,0,0,0.6);
+            letter-spacing: 3px;
+            font-weight: 800;
+            animation: title-glow 3s ease-in-out infinite alternate; /* 标题呼吸光效 */
+        }
+        
+        /* --- 晚会主题样式 (字体已加大) --- */
+        #main-theme {
+            font-size: 2.2rem; 
+            margin-top: 10px;
+            color: var(--text-light);
+            /* 使用粗犷的衬线字体，模拟书法感 */
+            font-family: 'SimSun', 'STKaiTi', 'KaiTi', serif; 
+            font-weight: 900; /* 极粗体 */
+            letter-spacing: 8px; /* 增加字间距 */
+            padding: 5px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            background: rgba(142, 14, 0, 0.4); /* 半透明红色背景 */
+            
+            /* 呼吸光晕效果：金红双色光晕 */
+            text-shadow: 
+                0 0 8px var(--theme-gold), /* 增大光晕效果 */
+                0 0 20px var(--theme-red-light);
+            
+            animation: theme-pulse 2s ease-in-out infinite alternate;
+        }
+
+        /* 控制面板 */
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            z-index: 10;
+        }
+
+        .btn {
+            padding: 10px 25px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+            font-weight: bold;
+        }
+
+        .btn-prize {
+            background: rgba(142, 14, 0, 0.6);
+            color: var(--theme-gold);
+            border: 2px solid var(--theme-gold-warm);
+        }
+
+        .btn-prize.active {
+            background: linear-gradient(to bottom, var(--theme-gold), var(--theme-gold-warm));
+            color: var(--theme-red-dark);
+            box-shadow: 0 0 20px var(--theme-gold);
+            transform: scale(1.05);
+        }
+
+        /* 核心操作按钮 */
+        .btn-action {
+            background: linear-gradient(to bottom, #ff4d5a, #d90429);
+            color: white;
+            min-width: 250px; /* 增加宽度以容纳更长的文本 */
+            border: 2px solid #ff7b85;
+            font-size: 1.3rem;
+        }
+        /* 增加按钮按下时的深度效果 */
+        .btn-action:active {
+            transform: translateY(2px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+        }
+
+        .btn-action:disabled {
+            background: #555;
+            border-color: #777;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-reset {
+            background: transparent;
+            color: rgba(255,255,255,0.6);
+            border: 1px solid rgba(255,255,255,0.3);
+            font-size: 0.9rem;
+        }
+        .btn-reset.danger {
+            color: #ffcccc;
+            border-color: #d90429;
+        }
+
+
+        /* 抽奖展示区 */
+        #display-area {
+            flex-grow: 1;
+            width: 90%;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-content: center;
+            gap: 30px;
+            padding: 20px;
+            z-index: 10;
+        }
+
+        /* 奖球样式 */
+        .ball {
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle at 30% 30%, #e0e0e0, #a0a0a0);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            color: #555;
+            font-weight: 900;
+            border: 4px solid #ccc;
+            box-shadow: inset -5px -5px 10px rgba(0,0,0,0.3), 0 10px 20px rgba(0,0,0,0.5);
+            position: relative;
+            transition: all 0.3s;
+            opacity: 0.8; /* 默认略透明 */
+        }
+        
+        /* 正在抽取的当前球（现在是所有未中奖球） */
+        .ball:not(.won) {
+            opacity: 0.6;
+        }
+
+        /* 已中奖的球（金蛋） - 确保高对比度 */
+        .ball.won {
+            opacity: 1;
+            background: radial-gradient(circle at 30% 30%, #fffbdb, #ffd700 40%, #ff8c00 100%);
+            color: #000; /* 修改为纯黑色，确保可见性 */
+            border-color: #ffd700;
+            box-shadow: 
+                inset -5px -5px 15px rgba(142, 14, 0, 0.3),
+                0 0 20px rgba(255, 215, 0, 0.6);
+            cursor: pointer;
+        }
+
+        .ball.won:hover::after {
+            content: "点击重抽";
+            position: absolute;
+            bottom: -30px;
+            font-size: 14px;
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        /* 滚动时的样式 */
+        .ball.rolling {
+            background: radial-gradient(circle at 30% 30%, #fff, #ffcccb);
+            color: #d90429;
+            border-color: #d90429;
+            opacity: 1; /* 滚动时高亮 */
+            /* 增加一点滚动时的跳动感 */
+            transform: scale(1.1) rotate(0deg);
+            transition: transform 0.1s;
+        }
+
+        .status-bar {
+            margin-bottom: 15px;
+            font-size: 1rem;
+            color: var(--theme-gold);
+            opacity: 0.8;
+            z-index: 10;
+        }
+
+        @keyframes shake {
+            0% { transform: scale(1.1) rotate(0deg); }
+            25% { transform: scale(1.1) rotate(-5deg); }
+            50% { transform: scale(1.1) rotate(5deg); }
+            75% { transform: scale(1.1) rotate(-5deg); }
+            100% { transform: scale(1.1) rotate(0deg); }
+        }
+        .shaking { animation: shake 0.5s infinite; }
+
+        /* --- 动画应用：根据奖项级别区分特效 --- */
+
+        /* 三等奖动画应用 */
+        .ball.won.reveal.pulse-gold-3rd {
+            animation: pulse-gold-3rd 0.5s ease-out 1;
+        }
+
+        /* 二等奖动画应用 */
+        .ball.won.reveal.pulse-gold-2nd {
+            animation: pulse-gold-2nd 0.7s ease-out 1; 
+        }
+
+        /* 一等奖动画应用 (最炫酷) */
+        .ball.won.reveal.pulse-gold-1st {
+            animation: pulse-gold-1st 1.0s ease-out 1; 
+        }
+    </style>
+</head>
+<body>
+    <!-- 粒子特效画布 -->
+    <canvas id="particleCanvas"></canvas>
+
+    <header>
+        <!-- 新增：东北大学标题 -->
+        <div id="university-title">东北大学</div>
+        <h1>🎉 工商管理学院元旦晚会 🎉</h1>
+        <!-- 新增/修改：晚会主题 (字体已加大) -->
+        <div id="main-theme">九秩承薪火，驰梦启新元</div> 
+    </header>
+
+    <div class="controls">
+        <button class="btn btn-prize" onclick="setPrize('3rd', 15, this)">三等奖 (15人)</button>
+        <button class="btn btn-prize" onclick="setPrize('2nd', 10, this)">二等奖 (10人)</button>
+        <button class="btn btn-prize" onclick="setPrize('1st', 5, this)">一等奖 (5人)</button>
+    </div>
+
+    <div class="controls">
+        <!-- 主操作按钮：控制滚动和批量抽取 -->
+        <button id="actionBtn" class="btn btn-action" onclick="toggleDraw()">请先选择奖项 (按空格)</button> 
+        <button class="btn btn-reset danger" onclick="resetAllData()">💥 彻底清空数据</button>
+    </div>
+
+    <div class="status-bar" id="status-text">数据加载中...</div>
+
+    <div id="display-area"></div>
+
+    <script>
+        // --- 存储 Key 定义 ---
+        const LS_KEY_NUMBERS = 'lottery_available_numbers';
+        const LS_KEY_RECORDS = 'lottery_prize_records';
+
+        // --- 全局配置数据 ---
+        const TOTAL_PEOPLE = 600;
+        let availableNumbers = []; // 剩余号码池
+        let currentPrizeId = null; // 当前正在操作的奖项ID (e.g., '3rd')
+        let currentPrizeTotal = 0; // 当前奖项总名额
+        let isRolling = false; // 是否处于滚动状态
+        let rollInterval = null; // 用于存储计时器ID
+        let rollingBalls = []; // 存储正在滚动的DOM元素
+
+        // 初始中奖记录结构
+        let prizeRecords = {
+            '3rd': [],
+            '2nd': [],
+            '1st': []
+        };
+
+        // --- 键盘事件监听 ---
+        document.addEventListener('keydown', function(event) {
+            // 检查是否是空格键 (key code 32 for spacebar, or modern event.code 'Space')
+            if (event.code === 'Space' || event.keyCode === 32) {
+                // 阻止默认的空格键行为（如页面滚动）
+                event.preventDefault(); 
+                // 只有在按钮不是 disabled 的情况下才触发抽奖
+                const actionBtn = document.getElementById('actionBtn');
+                if (!actionBtn.disabled) {
+                    toggleDraw();
+                }
+            }
+        });
+
+        // --- 数据存储/加载函数 ---
+
+        // 保存数据到 localStorage
+        function saveData() {
+            try {
+                localStorage.setItem(LS_KEY_NUMBERS, JSON.stringify(availableNumbers));
+                localStorage.setItem(LS_KEY_RECORDS, JSON.stringify(prizeRecords));
+            } catch (e) {
+                console.error("无法保存数据到本地存储:", e);
+                document.getElementById('status-text').textContent = "警告：浏览器存储受限，数据可能无法保存！";
+            }
+        }
+
+        // 从 localStorage 加载数据
+        function loadData() {
+            const savedNumbers = localStorage.getItem(LS_KEY_NUMBERS);
+            const savedRecords = localStorage.getItem(LS_KEY_RECORDS);
+
+            if (savedNumbers && savedRecords) {
+                // 加载历史数据
+                availableNumbers = JSON.parse(savedNumbers);
+                prizeRecords = JSON.parse(savedRecords);
+                console.log("数据已从本地存储加载，当前剩余人数:", availableNumbers.length);
+                updateStatus("数据已恢复 (上次进度)");
+            } else {
+                // 初始化新数据
+                initPool();
+                updateStatus("系统已初始化");
+            }
+            document.getElementById('actionBtn').disabled = true;
+
+            // 确保粒子动画在数据加载后启动
+            animateParticles(); 
+        }
+
+        // 页面加载时调用 loadData
+        window.onload = loadData;
+
+        // 初始化号码池 (仅在无历史数据时调用)
+        function initPool() {
+            availableNumbers = [];
+            for (let i = 1; i <= TOTAL_PEOPLE; i++) {
+                availableNumbers.push(i);
+            }
+            // 重置记录
+            prizeRecords = {'3rd': [], '2nd': [], '1st': []};
+            saveData(); // 立即保存初始化状态
+        }
+
+        // --- 切换奖项 ---
+        function setPrize(prizeId, count, clickedButton) {
+            if (isRolling) return; 
+            
+            // 确保 clickedButton 是一个有效的 DOM 元素
+            
+            currentPrizeId = prizeId;
+            currentPrizeTotal = count;
+            
+            // 按钮样式更新
+            document.querySelectorAll('.btn-prize').forEach(btn => btn.classList.remove('active'));
+            if (clickedButton) {
+                clickedButton.classList.add('active');
+            }
+            
+            const records = prizeRecords[prizeId];
+            const display = document.getElementById('display-area');
+            display.innerHTML = ''; // 清空显示区
+
+            let currentDrawnCount = records.length; 
+
+            // 1. 渲染已中奖名单 (如果有)
+            records.forEach((num, index) => {
+                const ball = createBall(num, `ball-${index}`, true);
+                display.appendChild(ball);
+            });
+
+            // 2. 渲染剩余的占位符 (如果有)
+            for(let i = currentDrawnCount; i < currentPrizeTotal; i++) {
+                const ball = createBall('?', `ball-${i}`, false);
+                display.appendChild(ball);
+            }
+
+            // 更新主按钮状态和样式
+            updateActionButton(currentDrawnCount);
+            
+            updateStatus(`当前奖项：${getLevelName(prizeId)}`);
+        }
+        
+        // --- 辅助函数：创建奖球DOM元素 ---
+        function createBall(content, id, isWon) {
+            let ball = document.createElement('div');
+            ball.className = isWon ? 'ball won' : 'ball';
+            ball.id = id;
+            ball.textContent = content;
+            if (isWon) {
+                ball.onclick = function() { redrawOne(this); };
+            }
+            return ball;
+        }
+
+        // --- 更新操作按钮文字和状态 (已适配批量抽取逻辑) ---
+        function updateActionButton(drawnCount) {
+            const btn = document.getElementById('actionBtn');
+            const remaining = currentPrizeTotal - drawnCount;
+
+            btn.disabled = false;
+            // 恢复默认的行动按钮样式
+            btn.className = 'btn btn-action'; 
+            btn.style.background = ''; // 清除内联 background 样式
+            btn.style.color = ''; // 清除内联 color 样式
+
+            if (remaining > 0) {
+                if (isRolling) {
+                    btn.textContent = `停 止 & 批量抽取 ${remaining} 人 (按空格)`;
+                    // 滚动状态下的高亮颜色
+                    btn.style.background = "#ffb300"; 
+                    btn.style.color = "#8e0e00";
+                } else {
+                    btn.textContent = `开始滚动 / 批量抽取 ${remaining} 人 (按空格)`;
+                }
+            } else {
+                btn.textContent = `${getLevelName(currentPrizeId)} 已全部抽出 (${currentPrizeTotal}人)`;
+                btn.disabled = true;
+                btn.style.background = "#555"; // 禁用时的颜色
+            }
+        }
+
+        // --- 核心批量抽奖逻辑（开始滚动或停止抽取） ---
+        function toggleDraw() {
+            if (!currentPrizeId) {
+                const status = document.getElementById('status-text');
+                // 修复：添加字符串引号
+                status.textContent = "⚠️ 请先选择要抽取的奖项！";
+                setTimeout(() => updateStatus(), 1500);
+                return;
+            }
+
+            const drawnCount = prizeRecords[currentPrizeId].length;
+            const remainingToDraw = currentPrizeTotal - drawnCount;
+
+            if (remainingToDraw <= 0 || availableNumbers.length === 0) {
+                updateActionButton(drawnCount);
+                return;
+            }
+
+            const display = document.getElementById('display-area');
+
+            if (!isRolling) {
+                // --> 1. 开始所有剩余球的滚动动画
+                isRolling = true;
+                rollingBalls = display.querySelectorAll('.ball:not(.won)');
+                updateActionButton(drawnCount); // 更新按钮为“停止”状态
+
+                // 使用 SetInterval 让所有空球同时滚动
+                rollInterval = setInterval(() => {
+                    if (availableNumbers.length === 0) {
+                        clearInterval(rollInterval);
+                        isRolling = false;
+                        updateActionButton(drawnCount);
+                        updateStatus("⚠️ 奖池已空，抽奖终止");
+                        return;
+                    }
+
+                    rollingBalls.forEach(ball => {
+                        // 从可用号码中随机选择一个显示
+                        const randomIndex = Math.floor(Math.random() * availableNumbers.length);
+                        ball.textContent = availableNumbers[randomIndex];
+                        ball.classList.add('rolling');
+                    });
+                }, 50); // 慢速滚动，给用户停止的时机
+
+            } else {
+                // --> 2. 停止滚动并执行批量抽取
+                isRolling = false;
+                clearInterval(rollInterval);
+
+                // 确定本次实际要抽取的数量
+                const drawCount = Math.min(remainingToDraw, availableNumbers.length);
+                
+                let newWinners = [];
+                for (let i = 0; i < drawCount; i++) {
+                    // 随机抽取并从可用池中移除
+                    const winIndex = Math.floor(Math.random() * availableNumbers.length);
+                    const winNum = availableNumbers[winIndex];
+                    availableNumbers.splice(winIndex, 1); 
+                    newWinners.push(winNum);
+                }
+
+                // 更新中奖记录
+                prizeRecords[currentPrizeId].push(...newWinners);
+                saveData(); 
+
+                // 更新 UI
+                const emptyBalls = display.querySelectorAll('.ball:not(.won)');
+                
+                // 确定动画时间和类名
+                const animationClass = `pulse-gold-${currentPrizeId}`;
+                let duration = 500;
+                if (currentPrizeId === '2nd') {
+                    duration = 700;
+                } else if (currentPrizeId === '1st') {
+                    duration = 1000;
+                }
+
+                emptyBalls.forEach((ball, index) => {
+                    if (index < drawCount) {
+                        // 仅更新实际抽中的球
+                        ball.textContent = newWinners[index];
+                        ball.classList.remove('rolling');
+                        ball.classList.add('won'); 
+                        
+                        // 触发中奖特效
+                        ball.classList.add('reveal', animationClass);
+                        setTimeout(() => {
+                            ball.classList.remove('reveal', animationClass);
+                        }, duration); 
+                        
+                        // 重新设置重抽事件
+                        ball.onclick = function() { redrawOne(this); };
+
+                    } else {
+                        // 奖池不足导致未抽中，这些球恢复占位符状态
+                        ball.textContent = '?';
+                        ball.classList.remove('rolling');
+                    }
+                });
+                
+                // 重新渲染和更新状态
+                updateActionButton(drawnCount + drawCount);
+
+                if (availableNumbers.length === 0 && drawCount > 0) {
+                     updateStatus(`🎉 成功抽取 ${drawCount} 人！⚠️ 奖池已空！`);
+                } else {
+                     updateStatus(`🎉 成功批量抽取 ${drawCount} 人！`);
+                }
+            }
+        }
+
+        // --- 单个重抽逻辑 (处理缺席) ---
+        function redrawOne(element) {
+            if(isRolling) return;
+            
+            const oldNum = parseInt(element.textContent);
+            // NOTE: Using window.confirm() as a functional placeholder for a custom modal UI in a simple tool.
+            if(!window.confirm(`⚠️ 确认号码【${oldNum}】缺席？\n我们将从奖池中重新抽取一人替换他。`)) return;
+
+            if (availableNumbers.length === 0) {
+                const status = document.getElementById('status-text');
+                status.textContent = "⚠️ 奖池已空！";
+                setTimeout(() => updateStatus(), 1500);
+                return;
+            }
+
+            const recordIndex = parseInt(element.id.split('-')[1]); 
+
+            element.classList.add('rolling');
+            element.classList.add('shaking');
+            
+            let singleRoll = setInterval(() => {
+                const randomIndex = Math.floor(Math.random() * availableNumbers.length);
+                element.textContent = availableNumbers[randomIndex];
+            }, 50);
+
+            setTimeout(() => {
+                clearInterval(singleRoll);
+                element.classList.remove('rolling');
+                element.classList.remove('shaking');
+                
+                // 抽取新号码
+                const winIndex = Math.floor(Math.random() * availableNumbers.length);
+                const winNum = availableNumbers[winIndex];
+                availableNumbers.splice(winIndex, 1); 
+                
+                // 将旧号码放回奖池（重要，因为是重抽）
+                availableNumbers.push(oldNum);
+
+                // 更新记录
+                prizeRecords[currentPrizeId][recordIndex] = winNum;
+                
+                element.textContent = winNum;
+                
+                // 重抽也应用特效
+                const animationClass = `pulse-gold-${currentPrizeId}`;
+                element.classList.add('reveal', animationClass); 
+                setTimeout(() => { element.classList.remove('reveal', animationClass); }, 500); // 使用默认时长
+
+                saveData(); // 保存重抽后的结果
+                updateStatus(`成功重抽！旧号码 ${oldNum} 已放回奖池。`);
+            }, 1000);
+        }
+
+        // --- 彻底清空系统数据 ---
+        function resetAllData() {
+            // 保持原有 window.confirm 逻辑
+            if(window.confirm("🔥🔥 警告：您确定要彻底清空所有中奖记录和奖池数据吗？\n\n您将需要重新开始从 600 人中抽取三等奖。\n\n（确认清空请点 确定）")) {
+                localStorage.removeItem(LS_KEY_NUMBERS);
+                localStorage.removeItem(LS_KEY_RECORDS);
+                location.reload(); // 刷新页面，重新初始化
+            }
+        }
+
+        // --- 状态辅助函数 ---
+        function getLevelName(prizeId) {
+            const names = {'1st': "一等奖", '2nd': "二等奖", '3rd': "三等奖"};
+            return names[prizeId] || "";
+        }
+
+        function updateStatus(prefix) {
+            const text = prefix ? prefix : "就绪";
+            document.getElementById('status-text').textContent = `${text} | 剩余未中奖人数：${availableNumbers.length}`;
+        }
+        
+        // --- 特效：粒子系统 (Confetti/Snow) ---
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        const particleCount = 50; 
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function Particle() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.size = Math.random() * 3 + 1;
+            this.speedX = Math.random() * 0.5 - 0.25; 
+            this.speedY = Math.random() * 0.5 + 0.5;
+            this.color = Math.random() < 0.5 ? 'rgba(255, 215, 0, 0.8)' : 'rgba(255, 0, 0, 0.8)';
+        }
+
+        Particle.prototype.draw = function() {
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fill();
+        };
+
+        Particle.prototype.update = function() {
+            this.x += this.speedX;
+            this.y += this.speedY;
+            
+            if (this.y > canvas.height) {
+                this.y = 0;
+                this.x = Math.random() * canvas.width;
+            }
+            if (this.x > canvas.width || this.x < 0) {
+                 this.x = Math.random() * canvas.width;
+            }
+        };
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+        initParticles();
+
+        function animateParticles() {
+            ctx.fillStyle = 'rgba(142, 14, 0, 0.05)'; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+            }
+            requestAnimationFrame(animateParticles);
+        }
+        
+        // 注意：animateParticles在 loadData 中调用，确保 canvas 已经初始化
+    </script>
+</body>
+</html>
